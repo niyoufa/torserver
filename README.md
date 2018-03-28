@@ -1,3 +1,3 @@
-pyserver 基于tornado的web应用开发框架
+A web application framework base on tornado and other async libraries.
 
 
