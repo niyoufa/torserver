@@ -1,0 +1,36 @@
+# @Time    : 2018/3/12 16:42
+# @Author  : Niyoufa
+
+
+import os
+
+# 服务器调试模式, 值为False时不自动重启服务器
+DEBUG = False
+
+AUTORELOAD = True
+
+COOKIE_SECRET = "test"
+
+XSRF_COOKIES = True
+
+# 项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# 模块配置，可以在配置文件中配置，也可以在ModuleModel存储模块信息
+MODULES = {
+    "default": {
+        "module_path": [],
+        "description": "默认",
+        "port": 8069,
+    },
+}
+
+# 数据库
+DATABASES = {
+    
+}
+
+# 允许访问的HOST配置
+ALLOWED_HOSTS = []
+
+INSTALLED_MODULES = []
