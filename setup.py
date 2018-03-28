@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='torserver',
-    version='2_1_0_20180329_beta',
+    version='2.1.0',
     author="niyoufa",
     author_email="niyoufa@aegis-data.cn",
     packages=find_packages(),
