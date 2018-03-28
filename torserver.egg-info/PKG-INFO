@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: torserver
+Version: 2.0
+Summary: A web application framework base on tornado and other async libraries.
+Home-page: http://www.niyoufa.com
+Author: niyoufa
+Author-email: niyoufa@aegis-data.cn
+License: UNKNOWN
+Description-Content-Type: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

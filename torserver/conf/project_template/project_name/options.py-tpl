@@ -1,6 +1,3 @@
-# @Time    : 2018/3/12 16:44
-# @Author  : Niyoufa
-
 from tornado.options import define
 
 

@@ -14,9 +14,8 @@ from torserver.utils.print import warning_print
 
 def get_commands():
     commands = [
-        ["shell", "命令行工具"],
-        ["startserver", "启动server"],
-        ["", ""],
+        ["shell", "python解释执行命令行工具"],
+        ["startserver", "启动server"]
     ]
     commands.append(get_core_commands())
 
@@ -33,7 +32,12 @@ def get_commands():
                 sub_commands = []
                 for name in names:
                     try:
-                        command_obj = load_command_class(command_path, name)
+                        modulename = "{command_path}.management.commands.{name}".format(
+                            command_path=command_path,
+                            name=name
+                        )
+                        import_module = importlib.import_module(modulename)
+                        command_obj = import_module.Command()
                         if command_obj.__doc__:
                             doc = command_obj.__doc__.strip()
                         else:
@@ -58,10 +62,9 @@ def get_commands():
 
     command_dict = {}
     for command in commands:
-        if len(command) == 3 and isinstance(command[2], list):
-            for sub_command in command[2]:
-                command_dict["{module_name}_{command_name}".format(module_name=command[0],
-                                                                   command_name=sub_command[0])] = sub_command[2]
+        if isinstance(command[1], list):
+            for sub_command in command[1]:
+                command_dict[command[0] + "." + sub_command[0]] = sub_command
         else:
             command_dict[command[0]] = command
 
@@ -94,8 +97,8 @@ def get_core_commands():
             print(traceback.format_exc())
     return ["core", "系统命令", sub_commands]
 
-def load_command_class(module_path, name):
-    module = importlib.import_module('%s.management.commands.%s' % (module_path, name))
+def load_command_class(app_name, name):
+    module = importlib.import_module('%s.management.commands.%s' % (app_name, name))
     return module.Command()
 
 
@@ -108,20 +111,13 @@ class ManagementUtility(object):
 
     def main_help_text(self):
         commands_info = ""
-        commands_info += "\n"
         for command in self.commands:
             if len(command) == 3 and isinstance(command[2], list):
+                commands_info += "\n" + command[0] + ":"
                 for sub_command in command[2]:
-                    commands_info += "\n{module_name}_{command_name} {command_info}".format(
-                        module_name = command[0],
-                        command_name = sub_command[0],
-                        command_info = sub_command[1],
-                    )
-                commands_info += "\n"
-            elif len(command) == 2:
-                commands_info += "\n" + command[0] + " " + command[1]
+                    commands_info += "\n" + "    " + command[0] + "." + sub_command[0] + " " + sub_command[1]
             else:
-                raise CommandError("command error")
+                commands_info += "\n" + command[0] + "    " + command[1]
         usage = [
             "可用的命令:%s" % (commands_info),
         ]
@@ -169,12 +165,18 @@ class ManagementUtility(object):
 
     def fetch_command(self, subcommand):
         if subcommand in self.command_dict:
-            command_obj = self.command_dict[subcommand]
-            if not isinstance(command_obj, BaseCommand):
-                raise CommandError("命令类型错误：{}")
-            return command_obj
+            app_name = self.command_dict[subcommand][2]
+            if isinstance(app_name, BaseCommand):
+                klass = app_name
+            else:
+                klass = load_command_class(app_name, subcommand)
+            return klass
         else:
-            raise CommandError("'{command}'命令不存在".format(command=subcommand))
+            print("'{command}'命令不存在".format(command=subcommand))
+
+    def load_command_class(self, app_name, name):
+        module = importlib.import_module('%s.management.commands.%s' % (app_name, name))
+        return module.Command()
 
 
 def execute_from_command_line(argv=None):
