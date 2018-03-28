@@ -35,7 +35,9 @@ class Module(object):
         if not isinstance(self.module_config, dict) or "":
             raise ModuleConfigError("module config error format：{module_config}".format(module_config=self.module_config))
 
-        self.handlers = self.load_module()
+        self.handlers = []
+        self.handlers.extend(self.load_third_module())
+        self.handlers.extend(self.load_module())
 
         self.port = options.port or self.module_config.get("port")
         if not isinstance(self.port, int):
@@ -80,4 +82,9 @@ class Module(object):
                 utils.error_print("{path} load error, {info}".format(path=path, info=info))
             else:
                 handlers.extend(sub_module_hanlders)
+        return handlers
+
+    def load_third_module(self):
+        # TODO 加载第三方模块
+        handlers = []
         return handlers

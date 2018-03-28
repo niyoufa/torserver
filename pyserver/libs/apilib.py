@@ -3,51 +3,34 @@
 import urllib.parse
 import tornado.gen
 import tornado.httpclient
-from pyserver.libs.singletonlib import Singleton
 
+def get_client(use_proxy=False):
+    if use_proxy == True:
+        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+    client = tornado.httpclient.AsyncHTTPClient()
+    return client
 
-class AsyncCallAPI(Singleton):
-    def get_client(self, **kwargs):
-        use_proxy = kwargs.get("use_proxy")
-        if use_proxy == True:
-            tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
-        client = tornado.httpclient.AsyncHTTPClient()
-        return client
+@tornado.gen.coroutine
+def get(url, params=None, **kwargs):
+    if params and isinstance(params, dict):
+        url += "?"
+        url += urllib.parse.urlencode(params)
 
-    @tornado.gen.coroutine
-    def request(self, method, url, callback, **kwargs):
-        def handle_response(response):
-            if callback and callable(callback):
-                callback(response)
+    http_client = get_client()
+    response = yield http_client.fetch(url, **kwargs)
+    return response
 
-        request = tornado.httpclient.HTTPRequest(url, method, **kwargs)
-        response = yield self.get_client(**kwargs).fetch(request, **kwargs)
-        return response
+async def async_get(url, params=None, **kwargs):
+    if params and isinstance(params, dict):
+        url += "?"
+        url += urllib.parse.urlencode(params)
 
-    @tornado.gen.coroutine
-    def get(self, url, params=None, callback=None, **kwargs):
-        """
-        Sends a GET request.
-        :param url: 
-        :param params: 
-        :param callback: 
-        :param kwargs: 
-        :return: 
-        """
-        if params and isinstance(params, dict):
-            url += "?"
-            url += urllib.parse.urlencode(params)
+    http_client = get_client()
+    response = await http_client.fetch(url, **kwargs)
+    return response
 
-        if "error_callback" in kwargs:
-            error_callback = kwargs.get("error_callback")
-            del kwargs["error_callback"]
-        else:
-            error_callback = None
-
-        try:
-            response = yield self.request("GET", url, callback, **kwargs)
-            return response
-        except tornado.httpclient.HTTPError as err:
-            # utils.error_print("url:{url}, err:{err}".format(url=url, err=err))
-            if error_callback and callable(error_callback):
-                error_callback("get", url, callback, err=err, **kwargs)
+@tornado.gen.coroutine
+def gets(urls, **kwargs):
+    http_client = get_client()
+    responses = yield [http_client.fetch(url, **kwargs) for url in urls]
+    return responses

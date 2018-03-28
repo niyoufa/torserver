@@ -17,10 +17,12 @@ def get_commands():
         ["help", "命令帮助信息"],
         ["shell", "python解释执行命令行工具"],
     ]
+    commands.append(get_core_commands())
 
     modules = const.MODULES
     for module_name in modules:
         module = modules[module_name]
+        name = module.get("name") or ""
         command_path = module.get("command_path")
         if command_path:
             try:
@@ -42,14 +44,15 @@ def get_commands():
                             doc = ""
                         sub_commands.append(
                             [
-                                name, "__doc__:{doc}".format(doc=doc or ""),
+                                name,
+                                doc,
                                 command_obj
                             ]
                         )
                     except:
                         print(traceback.format_exc())
 
-                commands.append([module_name, sub_commands])
+                commands.append([module_name, name, sub_commands])
             except:
                 print(traceback.format_exc())
         else:
@@ -67,6 +70,33 @@ def get_commands():
 
     return commands, command_dict
 
+def get_core_commands():
+    names = [f.split(".py")[0] for f in os.listdir("/".join([__path__[0], "commands"]))
+             if not f.startswith("__")]
+    sub_commands = []
+    for name in names:
+        try:
+            modulename = "{command_path}.management.commands.{name}".format(
+                command_path="pyserver.core",
+                name=name
+            )
+            import_module = importlib.import_module(modulename)
+            command_obj = import_module.Command()
+            if command_obj.__doc__:
+                doc = command_obj.__doc__.strip()
+            else:
+                doc = ""
+            sub_commands.append(
+                [
+                    name,
+                    doc,
+                    command_obj
+                ]
+            )
+        except:
+            print(traceback.format_exc())
+    return ["core", "系统命令", sub_commands]
+
 def load_command_class(app_name, name):
     module = importlib.import_module('%s.management.commands.%s' % (app_name, name))
     return module.Command()
@@ -82,9 +112,10 @@ class ManagementUtility(object):
     def main_help_text(self):
         commands_info = ""
         for command in self.commands:
-            if isinstance(command[1], list):
+            print(command)
+            if len(command) == 3 and isinstance(command[2], list):
                 commands_info += "\n" + command[0] + ":"
-                for sub_command in command[1]:
+                for sub_command in command[2]:
                     commands_info += "\n" + "    " + command[0] + "." + sub_command[0] + " " + sub_command[1]
             else:
                 commands_info += "\n" + command[0] + "    " + command[1]
