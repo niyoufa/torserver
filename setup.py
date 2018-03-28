@@ -9,5 +9,5 @@ setup(
     author_email="niyoufa@aegis-data.cn",
     packages=find_packages(),
     url="http://www.niyoufa.com",
-    description="A application framework base on tornado and other async libraries."
+    description="A web application framework base on tornado and other async libraries."
 )
