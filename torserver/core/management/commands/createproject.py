@@ -2,10 +2,12 @@
 # @Author  : Niyoufa
 import os
 import shutil
+from importlib import import_module
 from torserver.core import template
 from torserver.core.management.base import BaseCommand
 from torserver.core.management.base import CommandError
 from torserver.utils import dir
+from torserver.utils.print import green_print
 
 
 class Command(BaseCommand):
@@ -27,6 +29,22 @@ class Command(BaseCommand):
         )
 
     def check_projectname(self, projectname):
+        if not projectname:
+            raise CommandError("you must provide a projectname")
+        elif not projectname.isidentifier():
+            raise CommandError("'{projectname}' is not a valid project identifier".format(
+                projectname = projectname
+            ))
+        else:
+            try:
+                import_module(projectname)
+            except:
+                pass
+            else:
+                raise CommandError("'{projectname}' conflicts with the name of an existing Python".format(
+                    projectname = projectname
+                ))
+
         return projectname
 
     def get_default_projectpath(self):
@@ -54,5 +72,10 @@ class Command(BaseCommand):
             dir.traverse_tree(template.get_project_template_path(), file_handle=file_handle)
         except FileExistsError:
             raise CommandError("project has exists")
+
+        green_print("project {project_name} create success: {projectpath}".format(
+            project_name = self.projectname,
+            projectpath = self.projectpath
+        ))
 
 

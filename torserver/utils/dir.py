@@ -3,6 +3,13 @@
 import os
 
 def traverse_tree(path, file_handle=None, dir_handle=None):
+    """
+    遍历文件目录
+    :param path: 目录路径
+    :param file_handle: 文件处理函数
+    :param dir_handle: 目录处理函数
+    :return: None
+    """
     if not os.path.abspath(path):
         raise Exception("path is not exists")
     for root, dirs, files in os.walk(path):
