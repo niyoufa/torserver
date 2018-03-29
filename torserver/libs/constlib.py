@@ -32,13 +32,12 @@ class _const(object):
 
 
 const = _const()
-try:
-    settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
-    if settings_module:
-        settings = importlib.import_module(settings_module)
-        for setting in dir(settings):
-            if setting.isupper():
-                setting_value = getattr(settings, setting)
-                setattr(const, setting, setting_value)
-except BaseException:
-    raise const.ConstSettingNotExistError("can't find settings.py file")
+settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
+setattr(const, ENVIRONMENT_VARIABLE, settings_module)
+if settings_module:
+    settings = importlib.import_module(settings_module)
+    for setting in dir(settings):
+        if setting.isupper():
+            setting_value = getattr(settings, setting)
+            setattr(const, setting, setting_value)
+

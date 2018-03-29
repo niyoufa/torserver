@@ -22,9 +22,8 @@ ALLOWED_HOSTS = []
 MODULES = {
     "default": {
         "name":"默认模块",
-        "module_path": ["test_port.handlers.test_handlers"],
         "description": "默认模块",
-        "port": 8069,
+        "module_path": ["test_port.handlers.test_handlers"],
         "command_path":"test_port",
     },
 }

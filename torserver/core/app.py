@@ -7,8 +7,6 @@ import tornado.httpserver
 import tornado.ioloop
 from tornado.options import options
 
-os.environ.setdefault("SETTINGS_MODULE", "test_port.settings")
-os.environ.setdefault("OPTIONS_MODULE", "test_port.options")
 from torserver.libs.constlib import const
 from torserver.libs.optionslib import parse_options
 from torserver.core.module import Module
@@ -54,6 +52,9 @@ class Application(tornado.web.Application):
         self.executor = tornado.concurrent.futures.ThreadPoolExecutor(16)
 
 def run():
+    if not const.SETTINGS_MODULE:
+        raise const.ConstSettingNotExistError("can't find settings.py file")
+
     parse_options()
     module_name = options.module_name
     module = Module(module_name)
