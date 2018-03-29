@@ -20,14 +20,14 @@ def get_commands():
     ]
     commands.append(get_core_commands())
 
-    modules = const.MODULES
+    modules = const.MODULES or {}
     for module_name in modules:
         module = modules[module_name]
         name = module.get("name") or ""
         command_path = module.get("command_path")
         if command_path:
             try:
-                command_file_path = os.path.join(const.BASE_DIR,
+                command_file_path = os.path.join(const.BASE_DIR or "",
                      "/".join(command_path.split(".") + ["/management/commands"] ))
                 names = [f.split(".py")[0] for f in os.listdir(command_file_path) if not f.startswith("__")]
                 sub_commands = []
