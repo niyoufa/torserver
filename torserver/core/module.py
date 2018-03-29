@@ -19,13 +19,21 @@ class ModuleConfigError(Exception):
     模块配置错误
     """
 
+class Singleton(object):
+    def __new__(cls, *args, **kw):
+        if not hasattr(cls, '_instance'):
+            orig = super(Singleton, cls)
+            cls._instance = orig.__new__(cls)
+        return cls._instance
 
-class Module(object):
+
+class Module(Singleton):
     """
     模块
     """
 
     def __init__(self, module_name):
+        print("init module...")
         self.module_name = module_name or "default"
 
         if self.module_name not in const.MODULES:
@@ -36,11 +44,13 @@ class Module(object):
             raise ModuleConfigError("module config error format：{module_config}".format(module_config=self.module_config))
 
         self.handlers = []
-        self.handlers.extend(self.load_third_module())
+        self.handlers.extend(self.load_third_modules())
         self.handlers.extend(self.load_modules())
         self.print_handlers()
 
         self.port = options.port or self.module_config.get("port")
+        if not self.port:
+            raise Exception("port can not be None")
         if not isinstance(self.port, int):
             raise TypeError("port must be int")
 
@@ -95,3 +105,8 @@ class Module(object):
         # TODO 加载第三方模块
         handlers = []
         return handlers
+
+    @classmethod
+    def get_current(cls):
+        if hasattr(cls, "_instance"):
+            return cls._instance
