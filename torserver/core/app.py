@@ -49,7 +49,7 @@ class Application(tornado.web.Application):
             }))
 
         super(Application, self).__init__(module.handlers, **settings)
-        self.executor = tornado.concurrent.futures.ThreadPoolExecutor(16)
+        self.executor = tornado.concurrent.futures.ThreadPoolExecutor()
 
 def run():
     if not const.SETTINGS_MODULE:
