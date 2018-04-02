@@ -8,6 +8,7 @@ from torserver.core.management.base import BaseCommand
 from torserver.core.management.base import CommandError
 from torserver.utils import dir
 from torserver.utils.print import green_print
+from torserver.utils import crypto
 
 
 class Command(BaseCommand):
@@ -41,7 +42,7 @@ class Command(BaseCommand):
             except:
                 pass
             else:
-                raise CommandError("'{projectname}' conflicts with the name of an existing Python".format(
+                raise CommandError("'{projectname}' conflicts with the name of an existing Python Module".format(
                     projectname = projectname
                 ))
 
@@ -60,12 +61,28 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.projectname = options["projectname"]
         self.projectpath = os.path.join(options["projectpath"], self.projectname)
+        self.project_settings_path = os.path.join(self.projectpath, self.projectname)
 
         def file_handle(root, file):
             if file.endswith("-tpl"):
                 old_file = os.path.join(root, file)
-                new_file = os.path.join(self.projectpath, file[:-4])
+                new_file_path = os.path.join(
+                    options["projectpath"],
+                    root.split("/project_template/")[1].replace("project_name", self.projectname)
+                )
+
+                if not os.path.exists(new_file_path):
+                    os.makedirs(new_file_path)
+
+                new_file = os.path.join(new_file_path, file[:-4])
                 shutil.copyfile(old_file, new_file)
+                with open(new_file, "r") as f:
+                    file_content = f.read()
+                    file_content = file_content.replace("{cookie_secret}", crypto.get_random_secret_key())\
+                    .replace("{projectname}", self.projectname)
+
+                with open(new_file, "w") as f:
+                    f.write(file_content)
 
         try:
             os.makedirs(self.projectpath)
@@ -77,5 +94,3 @@ class Command(BaseCommand):
             project_name = self.projectname,
             projectpath = self.projectpath
         ))
-
-

@@ -1,23 +1,56 @@
 # @Time    : 2018/3/23 15:24
 # @Author  : Niyoufa
 import urllib.parse
-import tornado.gen
-import tornado.httpclient
+from tornado import gen
+from tornado import httpclient
 
-def get_client(use_proxy=False):
+
+class HTTPError(Exception):
+    pass
+
+def _get_client(use_proxy=False):
     if use_proxy == True:
-        tornado.httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
-    client = tornado.httpclient.AsyncHTTPClient()
+        httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+    client = httpclient.AsyncHTTPClient()
     return client
 
-@tornado.gen.coroutine
+@gen.coroutine
+def fetch(url, **kwargs):
+    http_client = _get_client()
+    try:
+        response = yield http_client.fetch(url, **kwargs)
+    except httpclient.HTTPError as err:
+        raise HTTPError("接口调用报错:{url}, {kwargs}, {err}".format(
+            url = url,
+            kwargs = kwargs,
+            err = err
+        ))
+    return response
+
+@gen.coroutine
 def get(url, params=None, **kwargs):
     if params and isinstance(params, dict):
         url += "?"
         url += urllib.parse.urlencode(params)
+    response = yield fetch(url, **kwargs)
+    return response
 
-    http_client = get_client()
-    response = yield http_client.fetch(url, **kwargs)
+@gen.coroutine
+def gets(urls, **kwargs):
+    http_client = _get_client()
+    responses = yield [http_client.fetch(url, **kwargs) for url in urls]
+    return responses
+
+async  def async_fetch(url, **kwargs):
+    http_client = _get_client()
+    try:
+        response = await http_client.fetch(url, **kwargs)
+    except httpclient.HTTPError as err:
+        raise HTTPError("接口调用报错:{url}, {kwargs}, {err}".format(
+            url = url,
+            kwargs = kwargs,
+            err = err
+        ))
     return response
 
 async def async_get(url, params=None, **kwargs):
@@ -25,12 +58,5 @@ async def async_get(url, params=None, **kwargs):
         url += "?"
         url += urllib.parse.urlencode(params)
 
-    http_client = get_client()
-    response = await http_client.fetch(url, **kwargs)
+    response = await async_fetch(url, **kwargs)
     return response
-
-@tornado.gen.coroutine
-def gets(urls, **kwargs):
-    http_client = get_client()
-    responses = yield [http_client.fetch(url, **kwargs) for url in urls]
-    return responses

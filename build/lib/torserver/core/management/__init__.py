@@ -14,47 +14,44 @@ from torserver.utils.print import warning_print
 
 def get_commands():
     commands = [
-        ["shell", "python解释执行命令行工具"],
-        ["startserver", "启动server"]
+        ["shell", "命令行工具"],
+        ["startserver", "启动server"],
+        ["", ""],
     ]
     commands.append(get_core_commands())
 
-    modules = const.MODULES
+    modules = const.MODULES or {}
     for module_name in modules:
         module = modules[module_name]
         name = module.get("name") or ""
         command_path = module.get("command_path")
-        if command_path:
-            try:
-                command_file_path = os.path.join(const.BASE_DIR,
-                     "/".join(command_path.split(".") + ["/management/commands"] ))
-                names = [f.split(".py")[0] for f in os.listdir(command_file_path) if not f.startswith("__")]
-                sub_commands = []
-                for name in names:
-                    try:
-                        modulename = "{command_path}.management.commands.{name}".format(
-                            command_path=command_path,
-                            name=name
-                        )
-                        import_module = importlib.import_module(modulename)
-                        command_obj = import_module.Command()
-                        if command_obj.__doc__:
-                            doc = command_obj.__doc__.strip()
-                        else:
-                            doc = ""
-                        sub_commands.append(
-                            [
-                                name,
-                                doc,
-                                command_obj
-                            ]
-                        )
-                    except:
-                        print(traceback.format_exc())
+        if command_path != None:
+            if command_path:
+                try:
+                    command_file_path = os.path.join(const.BASE_DIR or "",
+                         "/".join(command_path.split(".") + ["/management/commands"] ))
+                    names = [f.split(".py")[0] for f in os.listdir(command_file_path) if not f.startswith("__")]
+                    sub_commands = []
+                    for name in names:
+                        try:
+                            command_obj = load_command_class(command_path, name)
+                            if command_obj.__doc__:
+                                doc = command_obj.__doc__.strip()
+                            else:
+                                doc = ""
+                            sub_commands.append(
+                                [
+                                    name,
+                                    doc,
+                                    command_obj
+                                ]
+                            )
+                        except:
+                            print(traceback.format_exc())
 
-                commands.append([module_name, name, sub_commands])
-            except:
-                print(traceback.format_exc())
+                    commands.append([module_name, name, sub_commands])
+                except:
+                    print(traceback.format_exc())
         else:
             warning_print("module '{module_name}' command_path is  {command_path}, "
                   "please set module command_path in settings MODULES".format(
@@ -62,9 +59,10 @@ def get_commands():
 
     command_dict = {}
     for command in commands:
-        if isinstance(command[1], list):
-            for sub_command in command[1]:
-                command_dict[command[0] + "." + sub_command[0]] = sub_command
+        if len(command) == 3 and isinstance(command[2], list):
+            for sub_command in command[2]:
+                command_dict["{module_name}_{command_name}".format(module_name=command[0],
+                                                                   command_name=sub_command[0])] = sub_command[2]
         else:
             command_dict[command[0]] = command
 
@@ -97,8 +95,8 @@ def get_core_commands():
             print(traceback.format_exc())
     return ["core", "系统命令", sub_commands]
 
-def load_command_class(app_name, name):
-    module = importlib.import_module('%s.management.commands.%s' % (app_name, name))
+def load_command_class(module_path, name):
+    module = importlib.import_module('%s.management.commands.%s' % (module_path, name))
     return module.Command()
 
 
@@ -111,13 +109,20 @@ class ManagementUtility(object):
 
     def main_help_text(self):
         commands_info = ""
+        commands_info += "\n"
         for command in self.commands:
             if len(command) == 3 and isinstance(command[2], list):
-                commands_info += "\n" + command[0] + ":"
                 for sub_command in command[2]:
-                    commands_info += "\n" + "    " + command[0] + "." + sub_command[0] + " " + sub_command[1]
+                    commands_info += "\n{module_name}_{command_name} {command_info}".format(
+                        module_name = command[0],
+                        command_name = sub_command[0],
+                        command_info = sub_command[1],
+                    )
+                commands_info += "\n"
+            elif len(command) == 2:
+                commands_info += "\n" + command[0] + " " + command[1]
             else:
-                commands_info += "\n" + command[0] + "    " + command[1]
+                raise CommandError("command error")
         usage = [
             "可用的命令:%s" % (commands_info),
         ]
@@ -165,18 +170,12 @@ class ManagementUtility(object):
 
     def fetch_command(self, subcommand):
         if subcommand in self.command_dict:
-            app_name = self.command_dict[subcommand][2]
-            if isinstance(app_name, BaseCommand):
-                klass = app_name
-            else:
-                klass = load_command_class(app_name, subcommand)
-            return klass
+            command_obj = self.command_dict[subcommand]
+            if not isinstance(command_obj, BaseCommand):
+                raise CommandError("命令类型错误：{}")
+            return command_obj
         else:
-            print("'{command}'命令不存在".format(command=subcommand))
-
-    def load_command_class(self, app_name, name):
-        module = importlib.import_module('%s.management.commands.%s' % (app_name, name))
-        return module.Command()
+            raise CommandError("'{command}'命令不存在".format(command=subcommand))
 
 
 def execute_from_command_line(argv=None):

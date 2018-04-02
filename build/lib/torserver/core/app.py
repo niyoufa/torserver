@@ -1,14 +1,11 @@
 # @Time    : 2018/3/12 15:33
 # @Author  : Niyoufa
-import os
 import tornado.web
 import tornado.concurrent
 import tornado.httpserver
 import tornado.ioloop
 from tornado.options import options
 
-os.environ.setdefault("SETTINGS_MODULE", "test_port.settings")
-os.environ.setdefault("OPTIONS_MODULE", "test_port.options")
 from torserver.libs.constlib import const
 from torserver.libs.optionslib import parse_options
 from torserver.core.module import Module
@@ -49,18 +46,20 @@ class Application(tornado.web.Application):
                     # 'expires':None, #秒
                 },
             }))
-
         super(Application, self).__init__(module.handlers, **settings)
-        self.executor = tornado.concurrent.futures.ThreadPoolExecutor(16)
+        self.executor = tornado.concurrent.futures.ThreadPoolExecutor()
 
 def run():
+    if not const.SETTINGS_MODULE:
+        raise const.ConstSettingNotExistError("can't find settings.py file")
+
     parse_options()
     module_name = options.module_name
     module = Module(module_name)
     app = Application(module)
-    http_server = tornado.httpserver.HTTPServer(app)
 
+    http_server = tornado.httpserver.HTTPServer(app)
     http_server.bind(module.port)
-    http_server.start()
-    tornado.ioloop.IOLoop.instance().add_callback(lambda: print("server start, port: {port}!".format(port=module.port)))
-    tornado.ioloop.IOLoop.instance().start()
+    http_server.start(options.num_processes)
+    tornado.ioloop.IOLoop.current().add_callback(lambda: print("server start, port: {port}!".format(port=module.port)))
+    tornado.ioloop.IOLoop.current().start()

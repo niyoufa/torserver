@@ -24,14 +24,20 @@ class _const(object):
                 name)
         self.__dict__[name] = value
 
+    def __getattr__(self, item):
+        if item not in self.__dict__:
+            return None
+        else:
+            return super(_const, self).__getattribute__(item)
+
 
 const = _const()
-try:
-    settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
+settings_module = os.environ.get(ENVIRONMENT_VARIABLE)
+setattr(const, ENVIRONMENT_VARIABLE, settings_module)
+if settings_module:
     settings = importlib.import_module(settings_module)
     for setting in dir(settings):
         if setting.isupper():
             setting_value = getattr(settings, setting)
             setattr(const, setting, setting_value)
-except BaseException:
-    raise const.ConstSettingNotExistError("can't find settings.py file")
+
