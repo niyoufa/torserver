@@ -1,6 +1,5 @@
 # @Time    : 2018/3/12 15:33
 # @Author  : Niyoufa
-import os
 import tornado.web
 import tornado.concurrent
 import tornado.httpserver
