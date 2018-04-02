@@ -12,3 +12,5 @@ asyncio
 aiomysql
 aioelasticsearch
 asyncio_redis
+
+pandas

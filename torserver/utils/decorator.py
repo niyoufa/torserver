@@ -75,7 +75,7 @@ def threadpoll_executor(func):
         _future = self.application.executor.submit(
             functools.partial(func, self, *args, **kwargs)
         )
-        IOLoop.instance().add_future(_future, callback)
+        IOLoop.current().add_future(_future, callback)
     return _wrapper
 
 def time_consume(func):

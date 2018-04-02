@@ -47,7 +47,6 @@ class Application(tornado.web.Application):
                     # 'expires':None, #秒
                 },
             }))
-
         super(Application, self).__init__(module.handlers, **settings)
         self.executor = tornado.concurrent.futures.ThreadPoolExecutor()
 
@@ -59,9 +58,9 @@ def run():
     module_name = options.module_name
     module = Module(module_name)
     app = Application(module)
-    http_server = tornado.httpserver.HTTPServer(app)
 
+    http_server = tornado.httpserver.HTTPServer(app)
     http_server.bind(module.port)
-    http_server.start()
-    tornado.ioloop.IOLoop.instance().add_callback(lambda: print("server start, port: {port}!".format(port=module.port)))
-    tornado.ioloop.IOLoop.instance().start()
+    http_server.start(options.num_processes)
+    tornado.ioloop.IOLoop.current().add_callback(lambda: print("server start, port: {port}!".format(port=module.port)))
+    tornado.ioloop.IOLoop.current().start()

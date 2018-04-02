@@ -25,32 +25,33 @@ def get_commands():
         module = modules[module_name]
         name = module.get("name") or ""
         command_path = module.get("command_path")
-        if command_path:
-            try:
-                command_file_path = os.path.join(const.BASE_DIR or "",
-                     "/".join(command_path.split(".") + ["/management/commands"] ))
-                names = [f.split(".py")[0] for f in os.listdir(command_file_path) if not f.startswith("__")]
-                sub_commands = []
-                for name in names:
-                    try:
-                        command_obj = load_command_class(command_path, name)
-                        if command_obj.__doc__:
-                            doc = command_obj.__doc__.strip()
-                        else:
-                            doc = ""
-                        sub_commands.append(
-                            [
-                                name,
-                                doc,
-                                command_obj
-                            ]
-                        )
-                    except:
-                        print(traceback.format_exc())
+        if command_path != None:
+            if command_path:
+                try:
+                    command_file_path = os.path.join(const.BASE_DIR or "",
+                         "/".join(command_path.split(".") + ["/management/commands"] ))
+                    names = [f.split(".py")[0] for f in os.listdir(command_file_path) if not f.startswith("__")]
+                    sub_commands = []
+                    for name in names:
+                        try:
+                            command_obj = load_command_class(command_path, name)
+                            if command_obj.__doc__:
+                                doc = command_obj.__doc__.strip()
+                            else:
+                                doc = ""
+                            sub_commands.append(
+                                [
+                                    name,
+                                    doc,
+                                    command_obj
+                                ]
+                            )
+                        except:
+                            print(traceback.format_exc())
 
-                commands.append([module_name, name, sub_commands])
-            except:
-                print(traceback.format_exc())
+                    commands.append([module_name, name, sub_commands])
+                except:
+                    print(traceback.format_exc())
         else:
             warning_print("module '{module_name}' command_path is  {command_path}, "
                   "please set module command_path in settings MODULES".format(

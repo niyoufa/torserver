@@ -70,3 +70,8 @@ class BaseHandler(RequestHandler):
                     body=body,
                 ))
         return files
+
+    def init_response_data(self):
+        """初始化返回参数"""
+        result = {'code': 200, 'msg': '返回成功'}
+        return result

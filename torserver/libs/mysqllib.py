@@ -77,6 +77,5 @@ if __name__ == "__main__":
                 pass
         yield pool.close()
 
-
     ioloop = IOLoop.instance()
     ioloop.run_sync(test)
