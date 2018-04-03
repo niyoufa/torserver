@@ -32,12 +32,12 @@ class Module(Singleton):
     模块
     """
 
-    def __init__(self, module_name):
+    def __init__(self):
         print("init module...")
-        self.module_name = module_name or "default"
+        self.module_name = options.module_name or "default"
 
         if self.module_name not in const.MODULES:
-            raise ModuleNotExistsError("module not exists：{module_name}".format(module_name=module_name))
+            raise ModuleNotExistsError("module not exists：{module_name}".format(module_name=self.module_name))
 
         self.module_config = const.MODULES[self.module_name]
         if not isinstance(self.module_config, dict) or "":

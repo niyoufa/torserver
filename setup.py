@@ -18,8 +18,6 @@ def get_template_files():
         data_files.append((root, [os.path.join(root, file)]))
 
     traverse_tree("torserver/conf", file_handle=file_handle)
-    import pdb
-    pdb.set_trace()
     return data_files
 
 setup(

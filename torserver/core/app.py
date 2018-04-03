@@ -54,8 +54,7 @@ def run():
         raise const.ConstSettingNotExistError("can't find settings.py file")
 
     parse_options()
-    module_name = options.module_name
-    module = Module(module_name)
+    module = Module()
     app = Application(module)
 
     http_server = tornado.httpserver.HTTPServer(app)

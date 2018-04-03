@@ -1,3 +1,7 @@
 files.txt
 .idea
 *.pyc
+build
+dist
+torserver.egg-info
+
